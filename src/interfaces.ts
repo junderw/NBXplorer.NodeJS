@@ -62,3 +62,19 @@ export interface GetTransactionNoWalletResponse {
   height: number | null;
   timestamp: number;
 }
+
+interface RescanArg1 {
+  blockId: string;
+  transactionId: string;
+}
+
+interface RescanArg2 {
+  transactionId: string;
+}
+
+interface RescanArg3 {
+  blockId: string;
+  transaction: string;
+}
+
+export type RescanTxArgs = RescanArg1 | RescanArg2 | RescanArg3;
