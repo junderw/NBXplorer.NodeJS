@@ -3,7 +3,7 @@ export interface NBXClientOpts {
   cryptoCode: string;
   derivationScheme?: string;
   address?: string;
-  auth?: BasicAuth;
+  cookieFilePath?: string;
 }
 
 export interface BasicAuth {

@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as rp from 'request-promise-native';
 import {
   BasicAuth,
@@ -10,7 +11,7 @@ export class NBXClient {
   cryptoCode: string;
   derivationScheme?: string;
   address?: string;
-  private auth?: BasicAuth;
+  private cookieFilePath?: string;
 
   constructor(opts: NBXClientOpts) {
     if (!opts.uri || !opts.cryptoCode) {
@@ -29,6 +30,16 @@ export class NBXClient {
     this.uri = opts.uri; // Make TypeScript happy
     this.cryptoCode = opts.cryptoCode; // :-D :-D :-D
     Object.assign(this, opts);
+  }
+
+  private get auth(): BasicAuth | undefined {
+    if (this.cookieFilePath === undefined) return;
+    const text = fs.readFileSync(this.cookieFilePath, 'utf8');
+    const [user, pass] = text.split(':');
+    return {
+      user,
+      pass,
+    };
   }
 
   track(): Promise<any> {
