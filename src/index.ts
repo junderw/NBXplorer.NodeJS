@@ -4,6 +4,8 @@ import * as rp from 'request-promise-native';
 import {
   BasicAuth,
   BroadcastTxResponse,
+  CreatePsbtArgs,
+  CreatePsbtResponse,
   Event,
   GetAddressArgs,
   GetAddressResponse,
@@ -17,8 +19,11 @@ import {
   GetTransactionsResponse,
   GetUtxosResponse,
   NBXClientOpts,
+  PruneResponse,
   RescanTxArgs,
   ScanWalletArgs,
+  UpdatePsbtArgs,
+  UpdatePsbtResponse,
 } from './interfaces';
 
 export class NBXClient {
@@ -178,27 +183,27 @@ export class NBXClient {
     return makeGet(url, true, this.auth, opts);
   }
 
-  async createPsbt(): Promise<any> {
+  async createPsbt(opts: CreatePsbtArgs): Promise<CreatePsbtResponse> {
     this.checkHDWallet();
     const url =
       this.uri +
       `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/psbt/create`;
-    return makePost(url, true, this.auth);
+    return makePost(url, true, this.auth, opts);
   }
 
-  async updatePsbt(): Promise<any> {
+  async updatePsbt(opts: UpdatePsbtArgs): Promise<UpdatePsbtResponse> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/psbt/update`;
-    return makePost(url, true, this.auth);
+    return makePost(url, true, this.auth, opts);
   }
 
-  async addMeta(key: string, value: any): Promise<any> {
+  async addMeta(key: string, value: any): Promise<void> {
     const url =
       this.uri +
       `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/metadata/${key}`;
     return makePost(url, true, this.auth, { [key]: value });
   }
 
-  async removeMeta(key: string): Promise<any> {
+  async removeMeta(key: string): Promise<void> {
     const url =
       this.uri +
       `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/metadata/${key}`;
@@ -212,7 +217,7 @@ export class NBXClient {
     return makeGet(url, true, this.auth);
   }
 
-  async prune(): Promise<any> {
+  async prune(): Promise<PruneResponse> {
     this.checkHDWallet();
     const url =
       this.uri +

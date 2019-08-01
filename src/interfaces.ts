@@ -242,3 +242,63 @@ interface BlockEventData {
   previousBlockHash: string;
   cryptoCode: string;
 }
+
+type Destination = SweepAllDestination | AmountDestination;
+
+interface SweepAllDestination {
+  destination: string;
+  sweepAll: true;
+}
+
+interface AmountDestination {
+  destination: string;
+  amount: number;
+  substractFees?: boolean;
+}
+
+interface FeePreference {
+  explicitFeeRate?: number;
+  explicitFee?: number;
+  blockTarget?: number;
+  fallbackFeeRate?: number;
+}
+
+interface RebaseKeyPath {
+  masterFingerprint: string;
+  accountKey: string;
+  accountKeyPath: string;
+}
+
+export interface CreatePsbtArgs {
+  seed?: number;
+  rbf?: boolean;
+  version?: number;
+  timeLock?: number;
+  explicitChangeAddress?: string;
+  destinations: Destination[];
+  feePreference?: FeePreference;
+  reserveChangeAddress?: boolean;
+  minConfirmations?: number;
+  excludeOutpoints?: string[];
+  includeOnlyOutpoints?: string[];
+  rebaseKeyPaths?: RebaseKeyPath[];
+}
+
+export interface CreatePsbtResponse {
+  psbt: string;
+  changeAddress: string;
+}
+
+export interface UpdatePsbtArgs {
+  psbt: string;
+  derivationScheme: string;
+  rebaseKeyPaths?: RebaseKeyPath[];
+}
+
+export interface UpdatePsbtResponse {
+  psbt: string;
+}
+
+export interface PruneResponse {
+  totalPruned: number;
+}
