@@ -6,7 +6,8 @@
     "declaration": true,
     "rootDir": "./src",
     "types": [
-      "node"
+      "node",
+      "jest"
     ],
     "allowJs": false,
     "strict": true,
