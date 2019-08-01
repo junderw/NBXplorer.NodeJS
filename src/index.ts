@@ -29,9 +29,11 @@ export class NBXClient {
     // remove trailing slash
     if (opts.uri.slice(-1) === '/') opts.uri = opts.uri.slice(0, -1);
 
-    this.uri = opts.uri; // Make TypeScript happy
-    this.cryptoCode = opts.cryptoCode; // :-D :-D :-D
-    Object.assign(this, opts);
+    this.uri = opts.uri;
+    this.cryptoCode = opts.cryptoCode;
+    if (opts.derivationScheme) this.derivationScheme = opts.derivationScheme;
+    if (opts.address) this.address = opts.address;
+    if (opts.cookieFilePath) this.cookieFilePath = opts.cookieFilePath;
   }
 
   private get auth(): BasicAuth | undefined {
