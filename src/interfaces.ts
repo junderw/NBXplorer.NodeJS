@@ -24,15 +24,17 @@ export interface GetTransactionsResponse {
   };
 }
 
+interface Output {
+  keyPath: string;
+  scriptPubKey: string;
+  index: number;
+  value: number;
+}
+
 interface TransactionBase {
   confirmations: number;
   transactionId: string;
-  outputs: Array<{
-    keyPath: string;
-    scriptPubKey: string;
-    index: number;
-    value: number;
-  }>;
+  outputs: Output[];
   inputs: any[]; // TODO: type for inputs
   timestamp: number;
   balanceChange: number;
@@ -78,3 +80,165 @@ interface RescanArg3 {
 }
 
 export type RescanTxArgs = RescanArg1 | RescanArg2 | RescanArg3;
+
+export interface GetStatusResponse {
+  bitcoinStatus: {
+    blocks: number;
+    headers: number;
+    verificationProgress: number;
+    isSynched: boolean;
+    incrementalRelayFee: number;
+    minRelayTxFee: number;
+    capabilities: {
+      canScanTxoutSet: boolean;
+      canSupportSegwit: boolean;
+    };
+  };
+  repositoryPingTime: number;
+  isFullySynched: boolean;
+  chainHeight: number;
+  syncHeight: number;
+  networkType: string;
+  cryptoCode: string;
+  supportedCryptoCodes: string[];
+  version: string;
+}
+
+export interface GetAddressArgs {
+  feature?: string;
+  skip?: number;
+  reserve?: boolean;
+}
+
+export interface GetAddressResponse {
+  trackedSource: string;
+  feature: string;
+  derivationStrategy: string;
+  keyPath: string;
+  scriptPubKey: string;
+  address: string;
+  redeem: string;
+}
+
+export interface GetExtPubKeyFromScriptResponse {
+  trackedSource: string;
+  feature: string;
+  derivationStrategy: string;
+  keyPath: string;
+  scriptPubKey: string;
+  address: string;
+}
+
+export interface GetUtxosResponse {
+  trackedSource: string;
+  derivationStrategy?: string;
+  currentHeight: number;
+  unconfirmed: UtxoData;
+  confirmed: UtxoData;
+  hasChanges: boolean;
+}
+
+interface UtxoData {
+  utxOs: Utxo[];
+  spentOutpoints: string[];
+  hasChanges: boolean;
+}
+
+interface Utxo {
+  feature: string;
+  outpoint: string;
+  index: number;
+  transactionHash: string;
+  scriptPubKey: string;
+  value: number;
+  keyPath: string;
+  timestamp: number;
+  confirmations: number;
+}
+
+export interface BroadcastTxResponse {
+  success: boolean;
+  rpcCode: number;
+  rpcCodeMessage: string;
+  rpcMessage: string;
+}
+
+export interface GetFeeRateResponse {
+  feeRate: number;
+  blockCount: number;
+}
+
+export interface ScanWalletArgs {
+  batchSize?: number;
+  gapLimit?: number;
+  from?: number;
+}
+
+export interface GetScanStatusResponse {
+  error: string | null;
+  queuedAt: number;
+  status: string;
+  progress: {
+    startedAt: number;
+    completedAt: number | null;
+    found: number;
+    batchNumber: number;
+    remainingBatches: number;
+    currentBatchProgress: number;
+    remainingSeconds: number;
+    overallProgress: number;
+    from: number;
+    count: number;
+    totalSearched: number;
+    totalSizeOfUTXOSet: number | null;
+    highestKeyIndexFound: {
+      change: number | null;
+      deposit: number | null;
+      direct: number | null;
+      custom: number | null;
+    };
+  };
+}
+
+export interface GetEventsArgs {
+  lastEventId?: number;
+  longPolling?: boolean;
+  limit?: number;
+}
+
+export type Event = TransactionEvent | BlockEvent;
+
+interface TransactionEvent {
+  eventId: number;
+  type: string;
+  data: TransactionEventData;
+}
+
+interface BlockEvent {
+  eventId: number;
+  type: string;
+  data: BlockEventData;
+}
+
+interface TransactionEventData {
+  blockId: string | null;
+  trackedSource: string;
+  derivationStrategy: string;
+  transactionData: {
+    confirmations: number;
+    blockId: string | null;
+    transactionHash: string;
+    transaction: string;
+    height: number | null;
+    timestamp: number;
+  };
+  outputs: Output[];
+  cryptoCode: string;
+}
+
+interface BlockEventData {
+  height: number;
+  hash: string;
+  previousBlockHash: string;
+  cryptoCode: string;
+}

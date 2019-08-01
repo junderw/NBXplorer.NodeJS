@@ -1,12 +1,24 @@
 import * as fs from 'fs';
+import * as qs from 'querystring';
 import * as rp from 'request-promise-native';
 import {
   BasicAuth,
+  BroadcastTxResponse,
+  Event,
+  GetAddressArgs,
+  GetAddressResponse,
+  GetEventsArgs,
+  GetExtPubKeyFromScriptResponse,
+  GetFeeRateResponse,
+  GetScanStatusResponse,
+  GetStatusResponse,
   GetTransactionNoWalletResponse,
   GetTransactionResponse,
   GetTransactionsResponse,
+  GetUtxosResponse,
   NBXClientOpts,
   RescanTxArgs,
+  ScanWalletArgs,
 } from './interfaces';
 
 export class NBXClient {
@@ -60,48 +72,59 @@ export class NBXClient {
     return makePost(url, false, this.auth);
   }
 
-  async getTransactions(): Promise<GetTransactionsResponse> {
+  async getTransactions(
+    includeTransaction?: boolean,
+  ): Promise<GetTransactionsResponse> {
     this.checkWallet();
     const url = this.address
       ? this.uri +
         `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}/transactions`
       : this.uri +
         `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/transactions`;
-    return makeGet(url, true, this.auth);
+    const query = includeTransaction ? { includeTransaction } : undefined;
+    return makeGet(url, true, this.auth, query);
   }
 
-  async getTransaction(txid: string): Promise<GetTransactionResponse> {
+  async getTransaction(
+    txid: string,
+    includeTransaction?: boolean,
+  ): Promise<GetTransactionResponse> {
     this.checkWallet();
     const url = this.address
       ? this.uri +
         `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}/transactions/${txid}`
       : this.uri +
         `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/transactions/${txid}`;
-    return makeGet(url, true, this.auth);
+    const query = includeTransaction ? { includeTransaction } : undefined;
+    return makeGet(url, true, this.auth, query);
   }
 
   async getTransactionNoWallet(
     txid: string,
+    includeTransaction?: boolean,
   ): Promise<GetTransactionNoWalletResponse> {
     const url =
       this.uri + `/v1/cryptos/${this.cryptoCode}/transactions/${txid}`;
-    return makeGet(url, true, this.auth);
+    const query = includeTransaction ? { includeTransaction } : undefined;
+    return makeGet(url, true, this.auth, query);
   }
 
-  async getStatus(): Promise<any> {
+  async getStatus(): Promise<GetStatusResponse> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/status`;
     return makeGet(url, true, this.auth);
   }
 
-  async getAddress(): Promise<any> {
+  async getAddress(opts?: GetAddressArgs): Promise<GetAddressResponse> {
     this.checkHDWallet();
     const url =
       this.uri +
       `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/addresses/unused`;
-    return makeGet(url, true, this.auth);
+    return makeGet(url, true, this.auth, opts);
   }
 
-  async getExtPubKeyFromScript(script: string): Promise<any> {
+  async getExtPubKeyFromScript(
+    script: string,
+  ): Promise<GetExtPubKeyFromScriptResponse> {
     this.checkHDWallet();
     const url =
       this.uri +
@@ -109,7 +132,7 @@ export class NBXClient {
     return makeGet(url, true, this.auth);
   }
 
-  async getUtxos(): Promise<any> {
+  async getUtxos(): Promise<GetUtxosResponse> {
     this.checkWallet();
     const url = this.address
       ? this.uri +
@@ -119,32 +142,40 @@ export class NBXClient {
     return makeGet(url, true, this.auth);
   }
 
-  async broadcastTx(tx: Buffer): Promise<any> {
+  async broadcastTx(tx: Buffer): Promise<BroadcastTxResponse> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/transactions`;
     return makePost(url, false, this.auth, tx).then(JSON.parse);
   }
 
-  async rescanTx(transactions: RescanTxArgs[]): Promise<any> {
+  async rescanTx(transactions: RescanTxArgs[]): Promise<void> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/rescan`;
     return makePost(url, true, this.auth, { transactions });
   }
 
-  async getFeeRate(blockCount: number = 2): Promise<any> {
+  async getFeeRate(blockCount: number): Promise<GetFeeRateResponse> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/fees/${blockCount}`;
     return makeGet(url, true, this.auth);
   }
 
-  async scanWallet(): Promise<any> {
+  async scanWallet(opts?: ScanWalletArgs): Promise<void> {
     this.checkHDWallet();
     const url =
       this.uri +
       `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/utxos/scan`;
-    return makePost(url, true, this.auth);
+    return makePost(url, true, this.auth, undefined, opts);
   }
 
-  async getEvents(): Promise<any> {
-    const url = this.uri + `/v1/cryptos/${this.cryptoCode}/events`;
+  async getScanStatus(): Promise<GetScanStatusResponse> {
+    this.checkHDWallet();
+    const url =
+      this.uri +
+      `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/utxos/scan`;
     return makeGet(url, true, this.auth);
+  }
+
+  async getEvents(opts?: GetEventsArgs): Promise<Event[]> {
+    const url = this.uri + `/v1/cryptos/${this.cryptoCode}/events`;
+    return makeGet(url, true, this.auth, opts);
   }
 
   async createPsbt(): Promise<any> {
@@ -200,10 +231,15 @@ export class NBXClient {
   }
 }
 
-function makeGet(uri: string, json: boolean, auth?: BasicAuth): Promise<any> {
+function makeGet(
+  uri: string,
+  json: boolean,
+  auth?: BasicAuth,
+  query?: any,
+): Promise<any> {
   const opts: any = {
     method: 'GET',
-    uri,
+    uri: !query ? uri : uri + '?' + qs.stringify(query),
     auth,
     json,
   };
@@ -215,10 +251,11 @@ function makePost(
   json: boolean,
   auth?: BasicAuth,
   body?: any,
+  query?: any,
 ): Promise<any> {
   const opts: any = {
     method: 'POST',
-    uri,
+    uri: !query ? uri : uri + '?' + qs.stringify(query),
     auth,
     body,
     json,
