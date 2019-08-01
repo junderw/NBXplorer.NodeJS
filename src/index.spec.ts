@@ -18,6 +18,16 @@ const testInstance = () => {
     // @ts-ignore
     new NBXClient({ cryptoCode: 'btc' });
   }).toThrowError(new RegExp('Must contain uri .* and cryptoCode .*'));
+  expect(() => {
+    new NBXClient({
+      uri: 'http://localhost',
+      cryptoCode: 'btc',
+      address: 'xxx',
+      derivationScheme: 'yyy',
+    });
+  }).toThrowError(
+    new RegExp('Must contain address OR derivationScheme not both'),
+  );
 };
 
 describe('NBXClient', () => {
