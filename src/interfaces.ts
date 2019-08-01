@@ -49,3 +49,5 @@ interface UnconfirmedTransaction extends TransactionBase {
   height: null;
   transaction: null;
 }
+
+export type GetTransactionResponse = ConfirmedTransaction | UnconfirmedTransaction

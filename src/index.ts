@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as rp from 'request-promise-native';
 import {
   BasicAuth,
+  GetTransactionResponse,
   GetTransactionsResponse,
   NBXClientOpts,
 } from './interfaces';
@@ -24,6 +25,8 @@ export class NBXClient {
         'Must contain address OR derivationScheme not both or neither',
       );
     }
+    // make sure it is upper case
+    opts.cryptoCode = opts.cryptoCode.toUpperCase();
     // remove trailing slash
     if (opts.uri.slice(-1) === '/') opts.uri = opts.uri.slice(0, -1);
 
@@ -56,6 +59,15 @@ export class NBXClient {
         `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}/transactions`
       : this.uri +
         `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/transactions`;
+    return makeGet(url, true, this.auth);
+  }
+
+  getTransaction(txid: string): Promise<GetTransactionResponse> {
+    const url = this.address
+      ? this.uri +
+        `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}/transactions/${txid}`
+      : this.uri +
+        `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/transactions/${txid}`;
     return makeGet(url, true, this.auth);
   }
 }
