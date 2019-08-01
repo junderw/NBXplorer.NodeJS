@@ -50,4 +50,15 @@ interface UnconfirmedTransaction extends TransactionBase {
   transaction: null;
 }
 
-export type GetTransactionResponse = ConfirmedTransaction | UnconfirmedTransaction
+export type GetTransactionResponse =
+  | ConfirmedTransaction
+  | UnconfirmedTransaction;
+
+export interface GetTransactionNoWalletResponse {
+  confirmations: number | null;
+  blockId: string | null;
+  transactionHash: string;
+  transaction: string;
+  height: number | null;
+  timestamp: number;
+}

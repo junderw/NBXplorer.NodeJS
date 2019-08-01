@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as rp from 'request-promise-native';
 import {
   BasicAuth,
+  GetTransactionNoWalletResponse,
   GetTransactionResponse,
   GetTransactionsResponse,
   NBXClientOpts,
@@ -20,10 +21,8 @@ export class NBXClient {
         'Must contain uri (ex. https://nbx.mydomain.com ) and cryptoCode (ex. btc )',
       );
     }
-    if (!opts.address === !opts.derivationScheme) {
-      throw new Error(
-        'Must contain address OR derivationScheme not both or neither',
-      );
+    if (!opts.address === false && !opts.address === !opts.derivationScheme) {
+      throw new Error('Must contain address OR derivationScheme not both');
     }
     // make sure it is upper case
     opts.cryptoCode = opts.cryptoCode.toUpperCase();
@@ -45,7 +44,12 @@ export class NBXClient {
     };
   }
 
+  private get hasWallet(): boolean {
+    return !!this.address || !!this.derivationScheme;
+  }
+
   track(): Promise<any> {
+    this.checkWallet();
     const url = this.address
       ? this.uri + `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}`
       : this.uri +
@@ -54,6 +58,7 @@ export class NBXClient {
   }
 
   getTransactions(): Promise<GetTransactionsResponse> {
+    this.checkWallet();
     const url = this.address
       ? this.uri +
         `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}/transactions`
@@ -63,12 +68,31 @@ export class NBXClient {
   }
 
   getTransaction(txid: string): Promise<GetTransactionResponse> {
+    this.checkWallet();
     const url = this.address
       ? this.uri +
         `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}/transactions/${txid}`
       : this.uri +
         `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/transactions/${txid}`;
     return makeGet(url, true, this.auth);
+  }
+
+  getTransactionNoWallet(
+    txid: string,
+  ): Promise<GetTransactionNoWalletResponse> {
+    const url =
+      this.uri + `/v1/cryptos/${this.cryptoCode}/transactions/${txid}`;
+    return makeGet(url, true, this.auth);
+  }
+
+  getStatus(): Promise<any> {
+    const url = this.uri + `/v1/cryptos/${this.cryptoCode}/status`;
+    return makeGet(url, true, this.auth);
+  }
+
+  private checkWallet(): void {
+    if (!this.hasWallet)
+      throw new Error('This method needs an address or derivationScheme');
   }
 }
 
