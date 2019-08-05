@@ -20,29 +20,43 @@ const getCookie = (): Promise<void> =>
   }) as unknown) as Promise<void>;
 const resetNBX = async ({ noauth }: { noauth: boolean }): Promise<void> => {
   await rp(APIURL_C + '/resetNBX' + (noauth ? '?noauth=1' : ''));
-  await sleep(800);
 };
 const hasAuth = async (): Promise<boolean> => {
   const cli = new NBXClient({
     uri: APIURL,
     cryptoCode: 'btc',
   });
-  try {
-    const data = await cli.getStatus();
-    return !data;
-  } catch (err) {
-    return true;
-  }
+  return cli.getStatus().then(
+    () => false,
+    err => {
+      if (err.name === 'StatusCodeError' && err.statusCode === 401) {
+        return true;
+      }
+      throw err;
+    },
+  );
 };
 const setAuth = async (setTrue: boolean) => {
   if ((await hasAuth()) === !setTrue) {
     await resetNBX({ noauth: !setTrue });
+    while ((await hasAuth().then(v => v, () => !setTrue)) === !setTrue) {
+      await sleep(100);
+    }
     if (setTrue) await getCookie();
   }
 };
 const randomHDKey = (): bitcoinjs.BIP32Interface => {
   const rand = crypto.randomBytes(64);
   return bitcoinjs.bip32.fromSeed(rand, network);
+};
+const getPathPayment = (
+  root: bitcoinjs.BIP32Interface,
+  path: string,
+): bitcoinjs.Payment => {
+  return bitcoinjs.payments.p2pkh({
+    pubkey: root.derivePath(path).publicKey,
+    network,
+  });
 };
 
 const testInstance = () => {
@@ -88,13 +102,13 @@ const testTrack = async () => {
   });
   await assert.doesNotReject(cli.track());
   const result = await cli.getAddress();
+  const resultCustom = await cli.getAddress({ feature: 'Custom' });
   const result2 = await cli.getExtPubKeyFromScript(result.scriptPubKey);
-  const expected = bitcoinjs.payments.p2pkh({
-    pubkey: root.derivePath('m/0/0').publicKey,
-    network,
-  }).address;
+  const expected = getPathPayment(root, 'm/0/0').address;
+  const expectedCustom = getPathPayment(root, 'm/1/2/3/0/5').address;
   assert.strictEqual(result.address, expected);
   assert.strictEqual(result2.address, expected);
+  assert.strictEqual(resultCustom.address, expectedCustom);
 };
 
 const testAuth = async () => {
