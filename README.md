@@ -6,4 +6,4 @@ A NodeJS client for NBXplorer.
 npm install nbxplorer-client
 ```
 
-## IN HEAVY DEVELOPMENT. DO NOT USE YET.
+## OK coverage... should be OK to test out now
