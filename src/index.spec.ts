@@ -276,7 +276,7 @@ const testBroadcast = async () => {
   const unspent = await regtestUtils.faucet(address, 5e6);
   const txObj = await regtestUtils.fetch(unspent.txId);
   const nonWitnessUtxo = Buffer.from(txObj.txHex, 'hex');
-  const txBuffer = new bitcoinjs.Psbt()
+  const tx = new bitcoinjs.Psbt()
     .addInput({
       hash: unspent.txId,
       index: unspent.vout,
@@ -290,14 +290,78 @@ const testBroadcast = async () => {
     })
     .signInput(0, key)
     .finalizeInput(0)
-    .extractTransaction()
-    .toBuffer();
+    .extractTransaction();
   const cli = new NBXClient({
     uri: APIURL,
     cryptoCode: 'btc',
     cookieFilePath: COOKIE_FILE,
   });
-  await expect(cli.broadcastTx(txBuffer)).resolves.toBeTruthy();
+  await expect(cli.broadcastTx(tx.toBuffer())).resolves.toBeTruthy();
+  await regtestUtils.mine(6);
+  await cli.rescanTx([{ transactionId: tx.getId() }]);
+};
+
+const testScanWallet = async () => {
+  await setAuth(true);
+  const root = randomHDKey();
+  const xpub = root.neutered().toBase58();
+  const derivationScheme = xpub + '-[legacy]';
+  const cliHD = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+    derivationScheme,
+    cookieFilePath: COOKIE_FILE,
+  });
+  await regtestUtils.mine(10);
+  await cliHD.track();
+  await regtestUtils.mine(10);
+  await cliHD.scanWallet({ gapLimit: 4, batchSize: 20 });
+  await regtestUtils.mine(10);
+  let status: any;
+  do {
+    status = await cliHD.getScanStatus();
+    await sleep(100);
+  } while (status.status === 'Pending');
+  expect(status.status).toBe('Complete');
+  await cliHD.prune();
+};
+
+const testGetEvents = async () => {
+  await setAuth(true);
+  const cli = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+    cookieFilePath: COOKIE_FILE,
+  });
+  const events = await cli.getEvents();
+  expect(events).toBeTruthy();
+};
+
+const testPsbt = async () => {
+  await setAuth(true);
+  const root = randomHDKey();
+  const xpub = root.neutered().toBase58();
+  const derivationScheme = xpub + '-[legacy]';
+  const cliHD = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+    derivationScheme,
+    cookieFilePath: COOKIE_FILE,
+  });
+  await cliHD.track();
+  const payment = getPathPayment(root, 'm/0/0');
+  const address = payment.address!;
+  await regtestUtils.faucet(address, 5e6);
+  await regtestUtils.mine(6);
+  const result = await cliHD.createPsbt({
+    destinations: [{ destination: address, amount: 499e4 }],
+    feePreference: {
+      fallbackFeeRate: 1,
+    },
+  });
+  const psbt = bitcoinjs.Psbt.fromBase64(result.psbt);
+  psbt.signAllInputs(root.derivePath('m/0/0') as any);
+  await cliHD.updatePsbt({ psbt: psbt.toBase64() });
 };
 
 const testGetFeeRate = async () => {
@@ -352,7 +416,9 @@ describe('NBXClient', () => {
   beforeAll(async () => {
     if (await hasAuth()) await getCookie();
   });
+  it('should access NBX with auth properly', testAuth);
   it('should create an instance with uri and cryptoCode', testInstance);
+  it('should scan utxos for a wallet', testScanWallet);
   it('should throw errors when wallet is not present', testNoWalletError);
   it('should track derivationScheme and give address', testTrack);
   it('should get transactions from NBX', testGetTransactions);
@@ -362,7 +428,7 @@ describe('NBXClient', () => {
   );
   it('should get set and remove metadata', testMeta);
   it('should broadcast transactions', testBroadcast);
+  it('should get events for the coin', testGetEvents);
+  it('should create and update Psbt', testPsbt);
   it('should get the feeRate from bitcoind', testGetFeeRate);
-
-  it('should access NBX with auth properly', testAuth);
 });

@@ -291,7 +291,7 @@ export interface CreatePsbtResponse {
 
 export interface UpdatePsbtArgs {
   psbt: string;
-  derivationScheme: string;
+  derivationScheme?: string;
   rebaseKeyPaths?: RebaseKeyPath[];
 }
 

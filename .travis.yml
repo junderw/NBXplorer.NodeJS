@@ -1,0 +1,23 @@
+sudo: false
+language: node_js
+services:
+  - docker
+before_install:
+  - if [ $TEST_SUITE = "coverage" ]; then
+      docker pull junderw/nbxplorer-client-test-server &&
+      docker run -d -p 127.0.0.1:18271:18271 -p 127.0.0.1:23828:23828 -p 127.0.0.1:8080:8080 junderw/nbxplorer-client-test-server &&
+      docker ps -a;
+    fi
+node_js:
+  - "8"
+  - "10"
+  - "12"
+matrix:
+  include:
+    - node_js: "lts/*"
+      env: TEST_SUITE=format:ci
+    - node_js: "lts/*"
+      env: TEST_SUITE=lint
+env:
+  - TEST_SUITE=coverage APIURL_R=http://127.0.0.1:8080/1 APIURL_C=http://127.0.0.1:18271 APIURL=http://127.0.0.1:23828
+script: npm run-script $TEST_SUITE
