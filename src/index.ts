@@ -86,7 +86,8 @@ export class NBXClient {
         `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}/transactions`
       : this.uri +
         `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/transactions`;
-    const query = includeTransaction ? { includeTransaction } : undefined;
+    const query =
+      includeTransaction !== undefined ? { includeTransaction } : undefined;
     return makeGet(url, true, this.auth, query);
   }
 
@@ -100,7 +101,8 @@ export class NBXClient {
         `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}/transactions/${txid}`
       : this.uri +
         `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/transactions/${txid}`;
-    const query = includeTransaction ? { includeTransaction } : undefined;
+    const query =
+      includeTransaction !== undefined ? { includeTransaction } : undefined;
     return makeGet(url, true, this.auth, query);
   }
 
@@ -110,7 +112,8 @@ export class NBXClient {
   ): Promise<GetTransactionNoWalletResponse> {
     const url =
       this.uri + `/v1/cryptos/${this.cryptoCode}/transactions/${txid}`;
-    const query = includeTransaction ? { includeTransaction } : undefined;
+    const query =
+      includeTransaction !== undefined ? { includeTransaction } : undefined;
     return makeGet(url, true, this.auth, query);
   }
 
