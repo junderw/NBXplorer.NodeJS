@@ -1,6 +1,6 @@
 {
   "name": "nbxplorer-client",
-  "version": "0.0.4",
+  "version": "1.0.0",
   "description": "A NodeJS client library for controlling NBXplorer",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
