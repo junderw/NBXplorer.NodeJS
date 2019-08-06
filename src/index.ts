@@ -196,10 +196,14 @@ export class NBXClient {
 
   async updatePsbt(opts: UpdatePsbtArgs): Promise<UpdatePsbtResponse> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/psbt/update`;
+    if (opts && !opts.derivationScheme && this.derivationScheme) {
+      opts.derivationScheme = this.derivationScheme;
+    }
     return makePost(url, true, this.auth, opts);
   }
 
   async addMeta(key: string, value: any): Promise<void> {
+    this.checkHDWallet();
     const url =
       this.uri +
       `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/metadata/${key}`;
@@ -207,6 +211,7 @@ export class NBXClient {
   }
 
   async removeMeta(key: string): Promise<void> {
+    this.checkHDWallet();
     const url =
       this.uri +
       `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/metadata/${key}`;
@@ -219,6 +224,7 @@ export class NBXClient {
    *   addMeta.
    */
   async getMeta(key: string): Promise<any> {
+    this.checkHDWallet();
     const url =
       this.uri +
       `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/metadata/${key}`;
