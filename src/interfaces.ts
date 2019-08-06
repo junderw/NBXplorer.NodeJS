@@ -158,9 +158,9 @@ interface Utxo {
 
 export interface BroadcastTxResponse {
   success: boolean;
-  rpcCode: number;
-  rpcCodeMessage: string;
-  rpcMessage: string;
+  rpcCode: number | null;
+  rpcCodeMessage: string | null;
+  rpcMessage: string | null;
 }
 
 export interface GetFeeRateResponse {

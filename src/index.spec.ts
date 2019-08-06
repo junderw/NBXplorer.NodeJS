@@ -127,39 +127,39 @@ const testGetTransactions = async () => {
   const root = randomHDKey();
   const xpub = root.neutered().toBase58();
   const derivationScheme = xpub + '-[legacy]';
-  const cli = new NBXClient({
+  const cliHD = new NBXClient({
     uri: APIURL + '/', // testing if it deletes trailing slash
     cryptoCode: 'btc',
     derivationScheme,
     cookieFilePath: COOKIE_FILE,
   });
-  await assert.doesNotReject(cli.track());
+  await assert.doesNotReject(cliHD.track());
   const payment = getPathPayment(root, 'm/0/0');
   await sendToPayment(payment);
 
   let txes1: GetTransactionsResponse;
   let doLoop: boolean;
   do {
-    txes1 = await cli.getTransactions();
+    txes1 = await cliHD.getTransactions();
     doLoop = txes1.unconfirmedTransactions.transactions.length === 0;
     if (doLoop) await sleep(300);
   } while (doLoop);
 
-  const txes2 = await cli.getTransactions(false);
+  const txes2 = await cliHD.getTransactions(false);
   expect(
     txes1.unconfirmedTransactions.transactions[0].transaction,
   ).toBeDefined();
   expect(txes2.unconfirmedTransactions.transactions[0].transaction).toBeFalsy();
   const txid = txes1.unconfirmedTransactions.transactions[0].transactionId;
-  const singleTx1 = await cli.getTransaction(txid);
-  const singleTx2 = await cli.getTransaction(txid, false);
+  const singleTx1 = await cliHD.getTransaction(txid);
+  const singleTx2 = await cliHD.getTransaction(txid, false);
   expect(singleTx1.transaction).toBeDefined();
   expect(singleTx2.transaction).toBeFalsy();
-  const singleTx1b = await cli.getTransactionNoWallet(txid);
-  const singleTx2b = await cli.getTransactionNoWallet(txid, false);
+  const singleTx1b = await cliHD.getTransactionNoWallet(txid);
+  const singleTx2b = await cliHD.getTransactionNoWallet(txid, false);
   expect(singleTx1b.transaction).toBeDefined();
   expect(singleTx2b.transaction).toBeFalsy();
-  const utxos = await cli.getUtxos();
+  const utxos = await cliHD.getUtxos();
   expect(utxos.unconfirmed.utxOs[0].scriptPubKey).toBe(
     payment.output!.toString('hex'),
   );
@@ -170,38 +170,38 @@ const testGetTransactionsAddress = async () => {
   const root = randomHDKey();
   const payment = getPathPayment(root, 'm/0/0');
   const address = payment.address!;
-  const cli = new NBXClient({
+  const cliaddr = new NBXClient({
     uri: APIURL,
     cryptoCode: 'btc',
     address,
     cookieFilePath: COOKIE_FILE,
   });
-  await assert.doesNotReject(cli.track());
+  await assert.doesNotReject(cliaddr.track());
   await sendToPayment(payment);
 
   let txes1: GetTransactionsResponse;
   let doLoop: boolean;
   do {
-    txes1 = await cli.getTransactions();
+    txes1 = await cliaddr.getTransactions();
     doLoop = txes1.unconfirmedTransactions.transactions.length === 0;
     if (doLoop) await sleep(300);
   } while (doLoop);
 
-  const txes2 = await cli.getTransactions(false);
+  const txes2 = await cliaddr.getTransactions(false);
   expect(
     txes1.unconfirmedTransactions.transactions[0].transaction,
   ).toBeDefined();
   expect(txes2.unconfirmedTransactions.transactions[0].transaction).toBeFalsy();
   const txid = txes1.unconfirmedTransactions.transactions[0].transactionId;
-  const singleTx1 = await cli.getTransaction(txid);
-  const singleTx2 = await cli.getTransaction(txid, false);
+  const singleTx1 = await cliaddr.getTransaction(txid);
+  const singleTx2 = await cliaddr.getTransaction(txid, false);
   expect(singleTx1.transaction).toBeDefined();
   expect(singleTx2.transaction).toBeFalsy();
-  const singleTx1b = await cli.getTransactionNoWallet(txid);
-  const singleTx2b = await cli.getTransactionNoWallet(txid, false);
+  const singleTx1b = await cliaddr.getTransactionNoWallet(txid);
+  const singleTx2b = await cliaddr.getTransactionNoWallet(txid, false);
   expect(singleTx1b.transaction).toBeDefined();
   expect(singleTx2b.transaction).toBeFalsy();
-  const utxos = await cli.getUtxos();
+  const utxos = await cliaddr.getUtxos();
   expect(utxos.unconfirmed.utxOs[0].scriptPubKey).toBe(
     payment.output!.toString('hex'),
   );
@@ -266,6 +266,40 @@ const testMeta = async () => {
   expect(got2).toBe(42);
 };
 
+const testBroadcast = async () => {
+  const key = bitcoinjs.ECPair.makeRandom({ network });
+  const payment = bitcoinjs.payments.p2pkh({
+    pubkey: key.publicKey,
+    network,
+  });
+  const address = payment.address!;
+  const unspent = await regtestUtils.faucet(address, 5e6);
+  const txObj = await regtestUtils.fetch(unspent.txId);
+  const nonWitnessUtxo = Buffer.from(txObj.txHex, 'hex');
+  const txBuffer = new bitcoinjs.Psbt()
+    .addInput({
+      hash: unspent.txId,
+      index: unspent.vout,
+    })
+    .updateInput(0, {
+      nonWitnessUtxo,
+    })
+    .addOutput({
+      script: payment.output!,
+      value: 499e4,
+    })
+    .signInput(0, key)
+    .finalizeInput(0)
+    .extractTransaction()
+    .toBuffer();
+  const cli = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+    cookieFilePath: COOKIE_FILE,
+  });
+  await expect(cli.broadcastTx(txBuffer)).resolves.toBeTruthy();
+};
+
 const testGetFeeRate = async () => {
   await setAuth(true);
   const cli = new NBXClient({
@@ -327,6 +361,7 @@ describe('NBXClient', () => {
     testGetTransactionsAddress,
   );
   it('should get set and remove metadata', testMeta);
+  it('should broadcast transactions', testBroadcast);
   it('should get the feeRate from bitcoind', testGetFeeRate);
 
   it('should access NBX with auth properly', testAuth);

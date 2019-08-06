@@ -68,7 +68,7 @@ export class NBXClient {
     return !!this.address || !!this.derivationScheme;
   }
 
-  async track(): Promise<any> {
+  async track(): Promise<void> {
     this.checkWallet();
     const url = this.address
       ? this.uri + `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}`
@@ -213,6 +213,11 @@ export class NBXClient {
     return makePost(url, true, this.auth);
   }
 
+  /**
+   * @returns An Object with one key that matches the string `key` argument.
+   *   The data in key `key` is the same data passed as the `value` argument in
+   *   addMeta.
+   */
   async getMeta(key: string): Promise<any> {
     const url =
       this.uri +
