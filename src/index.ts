@@ -75,7 +75,13 @@ export class NBXClient {
     if (trackDerivationSchemeArg === undefined) {
       this.checkWallet();
     } else {
-      this.checkHDWallet();
+      try {
+        this.checkHDWallet();
+      } catch (err) {
+        throw new Error(
+          'This method needs a derivationScheme when passing trackDerivationSchemeArg',
+        );
+      }
     }
     const url = this.address
       ? this.uri + `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}`
