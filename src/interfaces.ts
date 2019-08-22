@@ -11,6 +11,17 @@ export interface BasicAuth {
   pass: string;
 }
 
+export interface TrackDerivationSchemeArg {
+  derivationOptions?: DerivationOptions[];
+  wait?: boolean;
+}
+
+interface DerivationOptions {
+  feature?: 'Deposit' | 'Change' | 'Direct' | 'Custom';
+  minAddresses?: number | null;
+  maxAddresses?: number | null;
+}
+
 export interface GetTransactionsResponse {
   height: number;
   confirmedTransactions: {
