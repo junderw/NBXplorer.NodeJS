@@ -22,6 +22,7 @@ import {
   PruneResponse,
   RescanTxArgs,
   ScanWalletArgs,
+  TrackDerivationSchemeArg,
   UpdatePsbtArgs,
   UpdatePsbtResponse,
 } from './interfaces';
@@ -68,13 +69,19 @@ export class NBXClient {
     return !!this.address || !!this.derivationScheme;
   }
 
-  async track(): Promise<void> {
-    this.checkWallet();
+  async track(
+    trackDerivationSchemeArg?: TrackDerivationSchemeArg,
+  ): Promise<void> {
+    if (trackDerivationSchemeArg === undefined) {
+      this.checkWallet();
+    } else {
+      this.checkHDWallet();
+    }
     const url = this.address
       ? this.uri + `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}`
       : this.uri +
         `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}`;
-    return makePost(url, false, this.auth);
+    return makePost(url, false, this.auth, trackDerivationSchemeArg);
   }
 
   async getTransactions(
