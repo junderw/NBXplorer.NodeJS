@@ -188,7 +188,7 @@ export interface ScanWalletArgs {
 export interface GetScanStatusResponse {
   error: string | null;
   queuedAt: number;
-  status: string;
+  status: 'Queued' | 'Pending' | 'Complete' | 'Error';
   progress: {
     startedAt: number;
     completedAt: number | null;
