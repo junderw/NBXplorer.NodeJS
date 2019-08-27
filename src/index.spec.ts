@@ -301,6 +301,93 @@ const testBroadcast = async () => {
   await cli.rescanTx([{ transactionId: tx.getId() }]);
 };
 
+const testBroadcastLarge = async () => {
+  const key = bitcoinjs.ECPair.makeRandom({ network });
+  const otherKeys = Array(3)
+    .fill(1)
+    .map(() => bitcoinjs.ECPair.makeRandom({ network }));
+  const paymentOld = bitcoinjs.payments.p2pkh({
+    pubkey: key.publicKey,
+    network,
+  });
+  const paymentNew = bitcoinjs.payments.p2sh({
+    redeem: bitcoinjs.payments.p2wsh({
+      redeem: bitcoinjs.payments.p2ms({
+        pubkeys: [key.publicKey].concat(otherKeys.map(k => k.publicKey)).sort(),
+        m: 2,
+        network,
+      }),
+      network,
+    }),
+    network,
+  });
+  const TOTAL_INPUT = 5e8;
+  const OUTPUT_COUNT = 670;
+  const EACH_OUTPUT = Math.floor(TOTAL_INPUT / OUTPUT_COUNT - 60);
+  const unspent = await regtestUtils.faucet(paymentOld.address!, TOTAL_INPUT);
+  const txObj = await regtestUtils.fetch(unspent.txId);
+  const nonWitnessUtxo = Buffer.from(txObj.txHex, 'hex');
+  const psbt = new bitcoinjs.Psbt()
+    .addInput({
+      hash: unspent.txId,
+      index: unspent.vout,
+    })
+    .updateInput(0, {
+      nonWitnessUtxo,
+    });
+  for (let i = 0; i < OUTPUT_COUNT; i++) {
+    psbt.addOutput({
+      script: paymentNew.output!,
+      value: EACH_OUTPUT,
+    });
+  }
+  const tx = psbt
+    .signInput(0, key)
+    .finalizeInput(0)
+    .extractTransaction();
+  const txid = tx.getId();
+  const cli = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+    cookieFilePath: COOKIE_FILE,
+  });
+  await cli.broadcastTx(tx.toBuffer());
+  await regtestUtils.mine(6);
+  await cli.rescanTx([{ transactionId: txid }]);
+
+  const psbt2 = new bitcoinjs.Psbt({ maximumFeeRate: 50000000 });
+  for (let i = 0; i < OUTPUT_COUNT; i++) {
+    psbt2
+      .addInput({
+        hash: txid,
+        index: i,
+      })
+      .updateInput(i, {
+        witnessUtxo: {
+          script: paymentNew.output!,
+          value: EACH_OUTPUT,
+        },
+        witnessScript: paymentNew.redeem!.redeem!.output,
+        redeemScript: paymentNew.redeem!.output,
+      });
+  }
+  psbt2.addOutput({
+    script: paymentNew.output!,
+    value: EACH_OUTPUT,
+  });
+  psbt2.addOutput({
+    script: paymentNew.output!,
+    value: EACH_OUTPUT * (OUTPUT_COUNT - 5),
+  });
+  psbt2.signAllInputs(key);
+  psbt2.signAllInputs(otherKeys[0]);
+  psbt2.finalizeAllInputs();
+  const bigTx = psbt2.extractTransaction();
+  const bigBuf = bigTx.toBuffer();
+  await cli.broadcastTx(bigBuf);
+  await regtestUtils.mine(6);
+};
+
 const testScanWallet = async () => {
   await setAuth(true);
   const root = randomHDKey();
@@ -428,6 +515,7 @@ describe('NBXClient', () => {
   );
   it('should get set and remove metadata', testMeta);
   it('should broadcast transactions', testBroadcast);
+  it('should broadcast very large transactions', testBroadcastLarge);
   it('should get events for the coin', testGetEvents);
   it('should create and update Psbt', testPsbt);
   it('should get the feeRate from bitcoind', testGetFeeRate);

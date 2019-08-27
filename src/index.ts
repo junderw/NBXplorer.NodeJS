@@ -165,7 +165,15 @@ export class NBXClient {
 
   async broadcastTx(tx: Buffer): Promise<BroadcastTxResponse> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/transactions`;
-    return makePost(url, false, this.auth, tx).then(JSON.parse);
+    return makePost(url, false, this.auth, tx)
+      .then(JSON.parse)
+      .then(
+        res =>
+          new Promise((resolve, reject): any => {
+            if (res.success === false) return reject(res);
+            return resolve(res);
+          }),
+      );
   }
 
   async rescanTx(transactions: RescanTxArgs[]): Promise<void> {
