@@ -165,15 +165,17 @@ export class NBXClient {
 
   async broadcastTx(tx: Buffer): Promise<BroadcastTxResponse> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/transactions`;
-    return makePost(url, false, this.auth, tx)
+    return makePost<string>(url, false, this.auth, tx)
       .then(JSON.parse)
-      .then(
-        res =>
-          new Promise((resolve, reject): any => {
-            if (res.success === false) return reject(res);
-            return resolve(res);
-          }),
-      );
+      .then((res: BroadcastTxResponse) => {
+        if (res.success === true) {
+          return res;
+        }
+        throw Object.assign(
+          new Error(res.rpcCodeMessage ? res.rpcCodeMessage : ''),
+          res,
+        );
+      });
   }
 
   async rescanTx(transactions: RescanTxArgs[]): Promise<void> {
@@ -271,28 +273,28 @@ export class NBXClient {
   }
 }
 
-function makeGet(
+function makeGet<T>(
   uri: string,
   json: boolean,
   auth?: BasicAuth,
   query?: any,
-): Promise<any> {
+): Promise<T> {
   const opts: any = {
     method: 'GET',
     uri: !query ? uri : uri + '?' + qs.stringify(query),
     auth,
     json,
   };
-  return (rp(opts) as unknown) as Promise<any>;
+  return (rp(opts) as unknown) as Promise<T>;
 }
 
-function makePost(
+function makePost<T>(
   uri: string,
   json: boolean,
   auth?: BasicAuth,
   body?: any,
   query?: any,
-): Promise<any> {
+): Promise<T> {
   const opts: any = {
     method: 'POST',
     uri: !query ? uri : uri + '?' + qs.stringify(query),
@@ -300,5 +302,5 @@ function makePost(
     body,
     json,
   };
-  return (rp(opts) as unknown) as Promise<any>;
+  return (rp(opts) as unknown) as Promise<T>;
 }
