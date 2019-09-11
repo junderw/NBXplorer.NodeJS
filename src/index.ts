@@ -302,3 +302,5 @@ function makePost(
   };
   return (rp(opts) as unknown) as Promise<any>;
 }
+
+export * from './interfaces';
