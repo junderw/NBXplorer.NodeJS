@@ -167,13 +167,15 @@ export class NBXClient {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/transactions`;
     return makePost(url, false, this.auth, tx)
       .then(JSON.parse)
-      .then(
-        res =>
-          new Promise((resolve, reject): any => {
-            if (res.success === false) return reject(res);
-            return resolve(res);
-          }),
-      );
+      .then((res: BroadcastTxResponse) => {
+        if (res.success === true) {
+          return res;
+        }
+        throw Object.assign(
+          new Error(res.rpcCodeMessage ? res.rpcCodeMessage : ''),
+          res,
+        );
+      });
   }
 
   async rescanTx(transactions: RescanTxArgs[]): Promise<void> {
