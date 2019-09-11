@@ -165,7 +165,7 @@ export class NBXClient {
 
   async broadcastTx(tx: Buffer): Promise<BroadcastTxResponse> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/transactions`;
-    return makePost<string>(url, false, this.auth, tx)
+    return makePost(url, false, this.auth, tx)
       .then(JSON.parse)
       .then((res: BroadcastTxResponse) => {
         if (res.success === true) {
@@ -273,28 +273,28 @@ export class NBXClient {
   }
 }
 
-function makeGet<T>(
+function makeGet(
   uri: string,
   json: boolean,
   auth?: BasicAuth,
   query?: any,
-): Promise<T> {
+): Promise<any> {
   const opts: any = {
     method: 'GET',
     uri: !query ? uri : uri + '?' + qs.stringify(query),
     auth,
     json,
   };
-  return (rp(opts) as unknown) as Promise<T>;
+  return (rp(opts) as unknown) as Promise<any>;
 }
 
-function makePost<T>(
+function makePost(
   uri: string,
   json: boolean,
   auth?: BasicAuth,
   body?: any,
   query?: any,
-): Promise<T> {
+): Promise<any> {
   const opts: any = {
     method: 'POST',
     uri: !query ? uri : uri + '?' + qs.stringify(query),
@@ -302,5 +302,5 @@ function makePost<T>(
     body,
     json,
   };
-  return (rp(opts) as unknown) as Promise<T>;
+  return (rp(opts) as unknown) as Promise<any>;
 }
