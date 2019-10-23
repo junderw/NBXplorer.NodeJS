@@ -87,7 +87,12 @@ export class NBXClient {
       ? this.uri + `/v1/cryptos/${this.cryptoCode}/addresses/${this.address}`
       : this.uri +
         `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}`;
-    return makePost(url, false, this.auth, JSON.stringify(trackDerivationSchemeArg));
+    return makePost(
+      url,
+      false,
+      this.auth,
+      JSON.stringify(trackDerivationSchemeArg || {}),
+    );
   }
 
   async getTransactions(
