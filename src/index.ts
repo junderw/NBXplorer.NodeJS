@@ -18,6 +18,7 @@ import {
   GetTransactionResponse,
   GetTransactionsResponse,
   GetUtxosResponse,
+  HealthCheckResponse,
   NBXClientOpts,
   PruneResponse,
   RescanTxArgs,
@@ -163,9 +164,14 @@ export class NBXClient {
     return makeGet(url, true, this.auth);
   }
 
-  async broadcastTx(tx: Buffer): Promise<BroadcastTxResponse> {
+  async broadcastTx(
+    tx: Buffer,
+    testMempoolAccept?: boolean,
+  ): Promise<BroadcastTxResponse> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/transactions`;
-    return makePost(url, false, this.auth, tx)
+    const query =
+      testMempoolAccept === true ? { testMempoolAccept: true } : undefined;
+    return makePost(url, false, this.auth, tx, query)
       .then(JSON.parse)
       .then((res: BroadcastTxResponse) => {
         if (res.success === true) {
@@ -260,6 +266,11 @@ export class NBXClient {
       this.uri +
       `/v1/cryptos/${this.cryptoCode}/derivations/${this.derivationScheme}/prune`;
     return makePost(url, true, this.auth);
+  }
+
+  async healthCheck(): Promise<HealthCheckResponse> {
+    const url = this.uri + `/health`;
+    return makeGet(url, true, undefined);
   }
 
   private checkWallet(): void {

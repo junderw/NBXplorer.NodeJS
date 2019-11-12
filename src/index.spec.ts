@@ -296,6 +296,8 @@ const testBroadcast = async () => {
     cryptoCode: 'btc',
     cookieFilePath: COOKIE_FILE,
   });
+  await expect(cli.broadcastTx(tx.toBuffer(), true)).resolves.toBeTruthy();
+  // Second broadcast doesn't fail since first did not actually broadcast
   await expect(cli.broadcastTx(tx.toBuffer())).resolves.toBeTruthy();
   await regtestUtils.mine(6);
   await cli.rescanTx([{ transactionId: tx.getId() }]);
@@ -479,6 +481,16 @@ const testGetFeeRate = async () => {
   expect(feeRate.feeRate).toBeDefined();
 };
 
+const testHealthCheck = async () => {
+  await setAuth(true);
+  const cli = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+  });
+  const result = await cli.healthCheck();
+  expect(result.results.NodesHealthCheck.data.BTC).toBe('Ready');
+};
+
 const testAuth = async () => {
   await setAuth(true);
   assert.ok(await hasAuth());
@@ -518,5 +530,6 @@ describe('NBXClient', () => {
   it('should broadcast very large transactions', testBroadcastLarge);
   it('should get events for the coin', testGetEvents);
   it('should create and update Psbt', testPsbt);
+  it('should get healthCheck result', testHealthCheck);
   it('should get the feeRate from bitcoind', testGetFeeRate);
 });
