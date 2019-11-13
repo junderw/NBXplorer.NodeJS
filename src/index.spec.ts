@@ -441,7 +441,9 @@ const testPsbt = async () => {
   const payment = getPathPayment(root, 'm/0/0');
   const address = payment.address!;
   await regtestUtils.faucet(address, 5e6);
+  await sleep(1000);
   await regtestUtils.mine(6);
+  await sleep(5000);
   const result = await cliHD.createPsbt({
     destinations: [{ destination: address, amount: 499e4 }],
     feePreference: {
