@@ -267,6 +267,19 @@ export interface AmountDestination {
   substractFees?: boolean;
 }
 
+type HealthStatus = 'Healthy' | 'Degraded' | 'Unhealthy';
+
+export interface HealthCheckResponse {
+  status: HealthStatus;
+  results: {
+    NodesHealthCheck: {
+      status: HealthStatus;
+      description: string | null;
+      data: { [index: string]: string };
+    };
+  };
+}
+
 export interface FeePreference {
   explicitFeeRate?: number;
   explicitFee?: number;
