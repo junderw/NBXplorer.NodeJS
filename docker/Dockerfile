@@ -16,7 +16,6 @@ RUN wget -q \
   dpkg -i packages-microsoft-prod.deb && \
   apt update && \
   apt install -y apt-transport-https && \
-  apt update && \
   apt install -y dotnet-sdk-3.0 && \
   rm packages-microsoft-prod.deb && \
   echo "export DOTNET_CLI_TELEMETRY_OPTOUT=1" >> ~/.bashrc
