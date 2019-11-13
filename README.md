@@ -10,6 +10,18 @@ npm install nbxplorer-client
 
 **FIRST READ THE NBXplorer DOCs AND UNDERSTAND HOW THE API WORKS**
 
+### HealthCheck
+
+```js
+const cli = new NBXClient({
+  uri: 'https://nbx.example.com',
+  cryptoCode: 'btc',
+});
+// healthCheck will work without cookieFilePath regardless of noauth state
+// It does not require auth no matter what
+const healthCheckResponse = await cli.healthCheck();
+```
+
 ### Bare minimum no-wallet methods
 
 ```js
@@ -20,6 +32,10 @@ const cli = new NBXClient({
 });
 const txData = await cli.getTransactionNoWallet(txid);
 const nbxStatus = await cli.getStatus();
+// Adding an optional true will return the broadcast response without actually broadcasting
+// Good for checking the validity of a tx that you wish to broadcast at a later date.
+const broadcastTxResponse = await cli.broadcastTx(txBuffer, true);
+// This will actually broadcast
 const broadcastTxResponse = await cli.broadcastTx(txBuffer);
 await cli.rescanTx([txArg, txArg, txArg]); // See NBX docs
 const feeRate = await cli.getFeeRate(blockCount);
