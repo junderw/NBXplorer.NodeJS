@@ -24,6 +24,7 @@ RUN wget -q \
 
 RUN git clone https://github.com/dgarage/NBXplorer.git && \
   cd NBXplorer/ && \
+  git checkout 99ca6e4 && \
   DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet build -c Release NBXplorer/NBXplorer.csproj
 
 COPY start_bitcoin_and_nbx.sh start_nbx.sh ./

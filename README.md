@@ -6,6 +6,12 @@ A NodeJS client for NBXplorer.
 npm install nbxplorer-client
 ```
 
+## NBXplorer Version
+
+The following version combinations have been tested and work together.
+
+1. NBXplorer.NodeJS v2.0.0 === NBXplorer v2.0.0.67 (github commit 99ca6e4)
+
 ## Usage
 
 **FIRST READ THE NBXplorer DOCs AND UNDERSTAND HOW THE API WORKS**

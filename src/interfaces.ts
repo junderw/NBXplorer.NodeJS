@@ -288,8 +288,13 @@ export interface FeePreference {
 }
 
 export interface RebaseKeyPath {
-  masterFingerprint: string;
   accountKey: string;
+  // accountKeyPath MUST refer to a path which is rooted in
+  // a 8 hex char masterFingerprint.
+  // ie. "ab5ed9ab/49'/0'/0'"
+  // The above would give you the rebase path for the BIP49 xpub of the
+  // first bitcoin account from a root node whose
+  // public key's masterFingerprint is 0xab5ed9ab.
   accountKeyPath: string;
 }
 
