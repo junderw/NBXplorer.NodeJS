@@ -16,6 +16,12 @@ The following version combinations have been tested and work together.
 
 **FIRST READ THE NBXplorer DOCs AND UNDERSTAND HOW THE API WORKS**
 
+### derivationScheme vs. derivationSchemeInternal
+
+When using LTC Ltub (old xpub version for LTC) NBXplorer converts to xpub in the
+backend. So if using derivationScheme to filter events from getEvents etc. please
+use the derivationSchemeInternal.
+
 ### HealthCheck
 
 ```js
