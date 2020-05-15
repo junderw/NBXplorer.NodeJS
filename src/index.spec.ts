@@ -98,6 +98,56 @@ const testInstance = () => {
   }).toThrowError(
     new RegExp('Must contain address OR derivationScheme not both'),
   );
+  expect(() => {
+    new NBXClient({
+      uri: 'http://localhost',
+      cryptoCode: 'btc',
+      derivationScheme:
+        '2-of-xpub6DFiVPHPp6RZQAhMufBLqrvtqPeVnfsa9aSKAkhEFjbXb4UQ8RhvoudxuYbCQvCEpS5kztMCqiettWF3bmTv253YmaD95KP7JYURCbM8pA5-tpubDCruHFc1BmwttsyBwemwVGguQsr8TKX3TDvin7zCCzwewbxgYrhPNzTPSayJzGyY9ZoYhcVVUSxEvar18D5cuXJmFjjzh9sZRbytJgFv9Y4',
+    });
+  }).toThrowError(
+    new RegExp('Invalid derivationScheme: All xpubs should be same version'),
+  );
+  expect(() => {
+    new NBXClient({
+      uri: 'http://localhost',
+      cryptoCode: 'btc',
+      derivationScheme:
+        'xpub6DFiVPHPp6RZQAhMufBLqrvtqPeVnfsa9aSKAkhEFjbXb4UQ8RhvoudxuYbCQvCEpS5kztMCqiettWF3bmTv253YmaD95KP7JYURCbM8pA5-xpub6CVdP2HfWQ9EFC3P8a8b1oz3v7uW9qprMnKvFof9TZkK9mqzmcKXGvpRckaQtepkx1hFvpZbKTZRdBXEjKfjG1os8o4LJeXpC9SvLj6WUnG',
+    });
+  }).toThrowError(
+    new RegExp(
+      'Invalid derivationScheme: Multiple xpubs but no "m-of-" prefix',
+    ),
+  );
+  expect(() => {
+    new NBXClient({
+      uri: 'http://localhost',
+      cryptoCode: 'btc',
+      derivationScheme: '-#$&',
+    });
+  }).toThrowError(new RegExp('Invalid derivationScheme'));
+};
+
+const testLtcConvert = () => {
+  const client = new NBXClient({
+    uri: 'http://localhost',
+    cryptoCode: 'ltc',
+    derivationScheme:
+      'Ltub2YvjqfVhPqTEVZKKj48asg6GzvE4udLzV4Xu5tQFq4b1t9UoRcpG6aJryd6SZ4E1YE6qWwx9AVCojGtMeDmB6wbHRvwnyLHrgeDGFFYihyU',
+  });
+  const client2 = new NBXClient({
+    uri: 'http://localhost',
+    cryptoCode: 'ltc',
+    derivationScheme:
+      'ttub4drVr6TfsehE24VmcuAyWDQzUuCwHcbtaaXmePPv7LPmdfcVRpavMu3uKMr4yyaZAErVth7wVuJ9o7ZYNsWKY7FpfqiMfJZGgzNuPMPKQfv',
+  });
+  expect(client.derivationSchemeInternal).toEqual(
+    'xpub6CVdP2HfWQ9EFC3P8a8b1oz3v7uW9qprMnKvFof9TZkK9mqzmcKXGvpRckaQtepkx1hFvpZbKTZRdBXEjKfjG1os8o4LJeXpC9SvLj6WUnG',
+  );
+  expect(client2.derivationSchemeInternal).toEqual(
+    'tpubDCsFuG7MDg6gWzEEam7gDjKRFF1A9EKuuQvDcMiHoUWCu4WhqqAcRNVFrnfCR9mzjvEAYQ5TrZPUKN1r8BWy9TGACPodzBC3n73L6j8jAuj',
+  );
 };
 
 const testTrack = async () => {
@@ -519,6 +569,7 @@ describe('NBXClient', () => {
   });
   it('should access NBX with auth properly', testAuth);
   it('should create an instance with uri and cryptoCode', testInstance);
+  it('should convert ltc Ltub and ttub to xpub and tpub', testLtcConvert);
   it('should scan utxos for a wallet', testScanWallet);
   it('should throw errors when wallet is not present', testNoWalletError);
   it('should track derivationScheme and give address', testTrack);

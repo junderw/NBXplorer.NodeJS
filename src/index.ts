@@ -27,11 +27,13 @@ import {
   UpdatePsbtArgs,
   UpdatePsbtResponse,
 } from './interfaces';
+import { derivationSchemeInternalConvert } from './utils';
 
 export class NBXClient {
   uri: string;
   cryptoCode: string;
   derivationScheme?: string;
+  derivationSchemeInternal?: string;
   address?: string;
   private cookieFilePath?: string;
 
@@ -51,7 +53,12 @@ export class NBXClient {
 
     this.uri = opts.uri;
     this.cryptoCode = opts.cryptoCode;
-    if (opts.derivationScheme) this.derivationScheme = opts.derivationScheme;
+    if (opts.derivationScheme) {
+      this.derivationScheme = opts.derivationScheme;
+      this.derivationSchemeInternal = derivationSchemeInternalConvert(
+        opts.derivationScheme,
+      );
+    }
     if (opts.address) this.address = opts.address;
     if (opts.cookieFilePath) this.cookieFilePath = opts.cookieFilePath;
   }
