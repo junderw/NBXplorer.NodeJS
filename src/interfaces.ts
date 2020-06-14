@@ -217,6 +217,10 @@ export interface GetEventsArgs {
   limit?: number;
 }
 
+export interface GetLatestEventsArgs {
+  limit?: number;
+}
+
 export type Event = TransactionEvent | BlockEvent;
 
 export interface TransactionEvent {

@@ -16,7 +16,7 @@ RUN wget -q \
   dpkg -i packages-microsoft-prod.deb && \
   apt update && \
   apt install -y apt-transport-https && \
-  apt install -y dotnet-sdk-3.0 && \
+  apt install -y dotnet-sdk-3.1 && \
   rm packages-microsoft-prod.deb && \
   echo "export DOTNET_CLI_TELEMETRY_OPTOUT=1" >> ~/.bashrc
 
@@ -24,7 +24,7 @@ RUN wget -q \
 
 RUN git clone https://github.com/dgarage/NBXplorer.git && \
   cd NBXplorer/ && \
-  git checkout 99ca6e4 && \
+  git checkout b33af19 && \
   DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet build -c Release NBXplorer/NBXplorer.csproj
 
 COPY start_bitcoin_and_nbx.sh start_nbx.sh ./
