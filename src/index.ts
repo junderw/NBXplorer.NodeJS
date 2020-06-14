@@ -12,6 +12,7 @@ import {
   GetEventsArgs,
   GetExtPubKeyFromScriptResponse,
   GetFeeRateResponse,
+  GetLatestEventsArgs,
   GetScanStatusResponse,
   GetStatusResponse,
   GetTransactionNoWalletResponse,
@@ -219,6 +220,11 @@ export class NBXClient {
 
   async getEvents(opts?: GetEventsArgs): Promise<Event[]> {
     const url = this.uri + `/v1/cryptos/${this.cryptoCode}/events`;
+    return makeGet(url, true, this.auth, opts);
+  }
+
+  async getLatestEvents(opts?: GetLatestEventsArgs): Promise<Event[]> {
+    const url = this.uri + `/v1/cryptos/${this.cryptoCode}/events/latest`;
     return makeGet(url, true, this.auth, opts);
   }
 

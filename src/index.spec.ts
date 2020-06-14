@@ -476,6 +476,17 @@ const testGetEvents = async () => {
   expect(events).toBeTruthy();
 };
 
+const testGetLatestEvents = async () => {
+  await setAuth(true);
+  const cli = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+    cookieFilePath: COOKIE_FILE,
+  });
+  const events = await cli.getLatestEvents();
+  expect(events).toBeTruthy();
+};
+
 const testPsbt = async () => {
   await setAuth(true);
   const root = randomHDKey();
@@ -582,6 +593,7 @@ describe('NBXClient', () => {
   it('should broadcast transactions', testBroadcast);
   it('should broadcast very large transactions', testBroadcastLarge);
   it('should get events for the coin', testGetEvents);
+  it('should get latest events for the coin', testGetLatestEvents);
   it('should create and update Psbt', testPsbt);
   it('should get healthCheck result', testHealthCheck);
   it('should get the feeRate from bitcoind', testGetFeeRate);
