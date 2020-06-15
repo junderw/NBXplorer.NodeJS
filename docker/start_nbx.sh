@@ -10,6 +10,8 @@ export NBXPLORER_CHAINS=btc
 export NBXPLORER_BTCNODEENDPOINT=127.0.0.1:18444
 export NBXPLORER_BTCRPCURL=http://127.0.0.1:18443/
 export NBXPLORER_CUSTOMKEYPATHTEMPLATE=1/2/3/*/5
+export NBXPLORER_EXPOSERPC=true
+export NBXPLORER_INSTANCENAME=TestNbxDocker
 
 # Run NBXplorer
 dotnet run --no-launch-profile --no-build -c Release -p "NBXplorer/NBXplorer.csproj" -- $@

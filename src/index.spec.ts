@@ -170,6 +170,49 @@ const testTrack = async () => {
   assert.strictEqual(result.address, expected);
   assert.strictEqual(result2.address, expected);
   assert.strictEqual(resultCustom.address, expectedCustom);
+  const cli2 = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+    address: expected,
+    cookieFilePath: COOKIE_FILE,
+  });
+  await expect(cli2.track({ wait: false })).rejects.toThrowError(
+    /This method needs a derivationScheme when passing trackDerivationSchemeArg/,
+  );
+};
+
+const testGenerateWallet = async () => {
+  await setAuth(true);
+  const cli = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+    cookieFilePath: COOKIE_FILE,
+  });
+  const wallet = await cli.generateWallet({ savePrivateKeys: true });
+  expect(wallet.derivationScheme).toEqual(cli.derivationScheme);
+  await assert.doesNotReject(cli.getAddress());
+};
+
+const testRpcProxy = async () => {
+  await setAuth(true);
+  const cli = new NBXClient({
+    uri: APIURL,
+    cryptoCode: 'btc',
+    cookieFilePath: COOKIE_FILE,
+  });
+  const rpcRes1 = await cli.rpcProxy({
+    jsonrpc: '1.0',
+    id: '1',
+    method: 'getbestblockhash',
+    params: [],
+  });
+  const rpcRes2 = await cli.rpcProxy({
+    jsonrpc: '1.0',
+    id: '1',
+    method: 'getbestblockhash',
+    params: [],
+  });
+  expect(rpcRes1.result).toEqual(rpcRes2.result);
 };
 
 const testGetTransactions = async () => {
@@ -242,6 +285,8 @@ const testGetTransactionsAddress = async () => {
     txes1.unconfirmedTransactions.transactions[0].transaction,
   ).toBeDefined();
   expect(txes2.unconfirmedTransactions.transactions[0].transaction).toBeFalsy();
+  const balance = await cliaddr.getBalance();
+  expect(balance).toBeDefined();
   const txid = txes1.unconfirmedTransactions.transactions[0].transactionId;
   const singleTx1 = await cliaddr.getTransaction(txid);
   const singleTx2 = await cliaddr.getTransaction(txid, false);
@@ -349,6 +394,7 @@ const testBroadcast = async () => {
   await expect(cli.broadcastTx(tx.toBuffer(), true)).resolves.toBeTruthy();
   // Second broadcast doesn't fail since first did not actually broadcast
   await expect(cli.broadcastTx(tx.toBuffer())).resolves.toBeTruthy();
+  await expect(cli.broadcastTx(Buffer.alloc(250, 2))).rejects.toThrow();
   await regtestUtils.mine(6);
   await cli.rescanTx([{ transactionId: tx.getId() }]);
 };
@@ -365,7 +411,9 @@ const testBroadcastLarge = async () => {
   const paymentNew = bitcoinjs.payments.p2sh({
     redeem: bitcoinjs.payments.p2wsh({
       redeem: bitcoinjs.payments.p2ms({
-        pubkeys: [key.publicKey].concat(otherKeys.map(k => k.publicKey)).sort(),
+        pubkeys: [key.publicKey]
+          .concat(otherKeys.map(k => k.publicKey))
+          .sort((a, b) => a.compare(b)),
         m: 2,
         network,
       }),
@@ -570,10 +618,15 @@ const testAuth = async () => {
     cryptoCode: 'btc',
   });
   await assert.doesNotReject(cli2.getStatus());
+  const status = await cli2.getStatus();
+  // the makeGet requester grabs the instanceName from the response headers
+  expect(cli2.instanceName).toBe('TestNbxDocker');
+  // it also appears in the getStatus response
+  expect(status.instanceName).toBe('TestNbxDocker');
 };
 
 // timeout is long just in case
-jest.setTimeout(30 * 1000);
+jest.setTimeout(60 * 1000);
 describe('NBXClient', () => {
   beforeAll(async () => {
     if (await hasAuth()) await getCookie();
@@ -591,6 +644,8 @@ describe('NBXClient', () => {
   );
   it('should get set and remove metadata', testMeta);
   it('should broadcast transactions', testBroadcast);
+  it('should generate a wallet and save the private keys', testGenerateWallet);
+  it('should send RPC requests through the proxy', testRpcProxy);
   it('should broadcast very large transactions', testBroadcastLarge);
   it('should get events for the coin', testGetEvents);
   it('should get latest events for the coin', testGetLatestEvents);
@@ -598,3 +653,25 @@ describe('NBXClient', () => {
   it('should get healthCheck result', testHealthCheck);
   it('should get the feeRate from bitcoind', testGetFeeRate);
 });
+
+// Adding this just to get rid of typescript error when I comment out tests
+export {
+  testAuth,
+  testInstance,
+  testLtcConvert,
+  testScanWallet,
+  testNoWalletError,
+  testTrack,
+  testGetTransactions,
+  testGetTransactionsAddress,
+  testMeta,
+  testBroadcast,
+  testGenerateWallet,
+  testRpcProxy,
+  testBroadcastLarge,
+  testGetEvents,
+  testGetLatestEvents,
+  testPsbt,
+  testHealthCheck,
+  testGetFeeRate,
+};
