@@ -31,7 +31,7 @@ export interface GetTransactionsResponse {
     transactions: UnconfirmedTransaction[];
   };
   replacedTransactions: {
-    transactions: ConfirmedTransaction[];
+    transactions: UnconfirmedTransaction[];
   };
 }
 
@@ -49,6 +49,9 @@ export interface TransactionBase {
   inputs: any[]; // TODO: type for inputs
   timestamp: number;
   balanceChange: number;
+  replaceable: boolean;
+  replacing: string | null;
+  replacedBy: string | null;
 }
 
 export interface ConfirmedTransaction extends TransactionBase {
@@ -66,6 +69,12 @@ export interface UnconfirmedTransaction extends TransactionBase {
 export type GetTransactionResponse =
   | ConfirmedTransaction
   | UnconfirmedTransaction;
+
+export interface GetBalanceResponse {
+  unconfirmed: number;
+  confirmed: number;
+  total: number;
+}
 
 export interface GetTransactionNoWalletResponse {
   confirmations: number | null;
@@ -103,6 +112,7 @@ export interface GetStatusResponse {
     capabilities: {
       canScanTxoutSet: boolean;
       canSupportSegwit: boolean;
+      canSupportTransactionCheck: boolean;
     };
   };
   repositoryPingTime: number;
@@ -111,6 +121,7 @@ export interface GetStatusResponse {
   syncHeight: number;
   networkType: string;
   cryptoCode: string;
+  instanceName: string;
   supportedCryptoCodes: string[];
   version: string;
 }
@@ -310,17 +321,23 @@ export interface CreatePsbtArgs {
   explicitChangeAddress?: string;
   destinations: Destination[];
   feePreference?: FeePreference;
+  discourageFeeSniping?: boolean;
   reserveChangeAddress?: boolean;
   minConfirmations?: number;
   excludeOutpoints?: string[];
   includeOnlyOutpoints?: string[];
+  minValue?: number;
   rebaseKeyPaths?: RebaseKeyPath[];
   disableFingerprintRandomization?: boolean;
+  alwaysIncludeNonWitnessUTXO?: boolean;
 }
 
 export interface CreatePsbtResponse {
   psbt: string;
   changeAddress: string;
+  suggestions: {
+    shouldEnforceLowR: boolean;
+  };
 }
 
 export interface UpdatePsbtArgs {
@@ -333,6 +350,50 @@ export interface UpdatePsbtResponse {
   psbt: string;
 }
 
+export interface GenerateWalletArgs {
+  savePrivateKeys: boolean;
+  accountNumber?: number;
+  wordList?:
+    | 'English'
+    | 'French'
+    | 'Japanese'
+    | 'Spanish'
+    | 'ChineseSimplified';
+  existingMnemonic?: string;
+  wordCount?: number;
+  scriptPubKeyType?: 'Legacy' | 'Segwit' | 'SegwitP2SH';
+  passphrase?: string;
+  importKeysToRPC?: boolean;
+}
+
+export interface GenerateWalletResponse {
+  mnemonic: string;
+  passphrase: string;
+  wordList: string;
+  wordCount: number;
+  masterHDKey: string;
+  accountHDKey: string;
+  accountKeyPath: string;
+  derivationScheme: string;
+}
+
+export interface PruneArgs {
+  daysToKeep?: number;
+}
+
 export interface PruneResponse {
   totalPruned: number;
+}
+
+export interface RpcProxyArgs {
+  jsonrpc: '1.0';
+  id: '1';
+  method: string;
+  params: any[];
+}
+
+export interface RpcProxyResponse {
+  error: string | null;
+  result: any;
+  resultString: string | null;
 }
