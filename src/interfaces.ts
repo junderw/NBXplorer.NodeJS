@@ -315,6 +315,7 @@ export interface CreatePsbtArgs {
   excludeOutpoints?: string[];
   includeOnlyOutpoints?: string[];
   rebaseKeyPaths?: RebaseKeyPath[];
+  disableFingerprintRandomization?: boolean;
 }
 
 export interface CreatePsbtResponse {

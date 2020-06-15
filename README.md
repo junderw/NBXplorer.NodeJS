@@ -99,6 +99,8 @@ const keyInfo = await cli.getExtPubKeyFromScript(scriptPubKeyHex) // must be rel
 await cli.scanWallet() // starts a scan of the utxo set (/utxo/scan endpoint)
 const status = await cli.getScanStatus() // get status of scan
 // createPsbt will throw an error if fee info is not available, use fallbackFeeRate just in case
+// if you don't pass disableFingerprintRandomization: true, then rbf, discourageFeeSniping, version, and lockTime
+// will be randomized for privacy
 const psbtData = await cli.createPsbt({destinations: [{ destination: address }]})
 await cli.addMeta(key, value);
 const meta = await cli.getMeta(key); // meta is an object with key `key` and value of type value passed to addMeta
